@@ -37,16 +37,19 @@
     display: flex;
     margin-bottom: 4px;
 
+    font-size: 7vh;
+
     .letter-container {
       width: 64px;
       height: 64px;
-      border: 2px solid #4C4347;
+      border: 0.125em solid #4C4347;
+      border-radius: 10%;
       box-sizing: border-box;
       margin: 0 2px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 32px;
+      font-size: 0.65em;
       font-weight: 600;
       text-transform: uppercase;
     }
