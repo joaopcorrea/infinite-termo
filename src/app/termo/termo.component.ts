@@ -44,10 +44,13 @@ enum LetterState {
   templateUrl: './termo.component.html',
   styleUrls: ['./termo.component.scss']
 })
-export class TermoComponent implements OnInit {
+export class TermoComponent {
   // Stores all tries
   // One try is one row in the UI
   readonly tries: Try[] = [];
+
+  // Message shown in the message panel
+  infoMsg = '';
 
   // Tracks the current letter index
   private curLetterIndex = 0;
@@ -66,9 +69,6 @@ export class TermoComponent implements OnInit {
     }
   }
 
-  ngOnInit(): void {
-  }
-
   @HostListener('document:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
     this.handleClickKey(event.key);
@@ -85,12 +85,16 @@ export class TermoComponent implements OnInit {
       }
     }
     // Handle delete
-    else if (key == 'Backspace') {
+    else if (key === 'Backspace') {
       // Don't delete previous try
       if (this.curLetterIndex > this.numSubmittedTries * WORD_LENGTH) {
         this.curLetterIndex--;
         this.setLetter('');
       }
+    } 
+    // Submit the current try and check
+    else if (key === 'Enter') {
+      this.checkCurrentTry();
     }
   }
 
@@ -98,5 +102,25 @@ export class TermoComponent implements OnInit {
     const tryIndex = Math.floor(this.curLetterIndex / WORD_LENGTH);
     const letterIndex = this.curLetterIndex - tryIndex * WORD_LENGTH;
     this.tries[tryIndex].letters[letterIndex].text = letter;
+  }
+
+  private checkCurrentTry() {
+    // Check if user has typed all letters
+    const curTry = this.tries[this.numSubmittedTries];
+    if (curTry.letters.some(letter => letter.text === '')) {
+      console.log('not enough letters');
+      return;
+    }
+  }
+  
+  isNextLetter(t: Try, l: Letter) {
+    const tryIndex = this.tries.indexOf(t);
+
+    if (tryIndex > this.numSubmittedTries)
+      return false;
+
+    const letterIndex = this.tries[tryIndex].letters.indexOf(l);
+    const index = tryIndex * WORD_LENGTH + letterIndex
+    return index == this.curLetterIndex;
   }
 }

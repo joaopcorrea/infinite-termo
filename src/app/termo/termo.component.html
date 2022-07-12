@@ -11,7 +11,8 @@
   <div class="main">
     <div class="try-container" *ngFor="let try of tries">
       <div class="letter-container" *ngFor="let letter of try.letters"
-          [class.has-text]="letter.text !== ''">
+          [class.has-text]="letter.text !== ''"
+          [class.next-letter]="isNextLetter(try, letter)">
         {{ letter.text }}
       </div>
     </div>
@@ -19,5 +20,9 @@
 
   <div class="keyboard-container">
     keyboard
+  </div>
+
+  <div class="info-msg">
+    {{ infoMsg }}
   </div>
 </div>
