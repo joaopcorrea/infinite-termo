@@ -36,13 +36,18 @@
     .try-container {
       display: flex;
       margin-bottom: 4px;
-
       font-size: 7vh;
+
+      &.shake {
+        animation-name: shake;
+        animation-duration: 500ms;
+      }
 
       .letter-container {
         width: 64px;
         height: 64px;
-        border: 0.125em solid #4C4347;
+        border: 0.125em solid #615458;
+        background-color: #615458;
         border-radius: 10%;
         box-sizing: border-box;
         margin: 0 2px;
@@ -52,6 +57,11 @@
         font-size: 0.65em;
         font-weight: 600;
         text-transform: uppercase;
+
+        &.current-row {
+          border: 0.125em solid #4C4347;
+          background-color: transparent;
+        }
 
         &.has-text {
           animation-name: letter-pop;
@@ -72,21 +82,24 @@
   .info-msg {
     position: absolute;
     top: 70px;
-    padding: 16px 24px;
-    background-color: black;
+    padding: 8px 42px;
+    background-color: #009AFE;
     color: white;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
+    border-radius: 10px;
+    font-size: 24px;
+    font-weight: 400;
     opacity: 0;
 
     &.show {
       opacity: 1;
+      animation-name: message-pop;
+      animation-duration: 200ms;
     }
 
     &.fade-out {
       opacity: 0;
-      transition: opacity 500ms;
+      transform: scale(0);
+      transition: all 500ms;
     }
   }
 }
@@ -96,4 +109,33 @@
   0% { transform: scale(1); }
   50% { transform: scale(1.15); }
   100% { transform: scale(1); }
+}
+
+@keyframes message-pop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+
+  40%,
+  60% {
+    transform: translate(4px);
+  }
 }

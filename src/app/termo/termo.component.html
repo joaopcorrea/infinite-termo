@@ -9,10 +9,11 @@
   </div>
 
   <div class="main">
-    <div class="try-container" *ngFor="let try of tries">
+    <div class="try-container" *ngFor="let try of tries" #tryContainer>
       <div class="letter-container" *ngFor="let letter of try.letters"
           [class.has-text]="letter.text !== ''"
-          [class.next-letter]="isNextLetter(try, letter)">
+          [class.next-letter]="isNextLetter(try, letter)"
+          [class.current-row]="isCurrentRow(try, letter)">
         {{ letter.text }}
       </div>
     </div>
@@ -22,7 +23,9 @@
     keyboard
   </div>
 
-  <div class="info-msg">
+  <div class="info-msg" 
+      [class.show]="infoMsg !== ''"
+      [class.fade-out]="fadeOutInfoMessage">
     {{ infoMsg }}
   </div>
 </div>
