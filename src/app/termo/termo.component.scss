@@ -30,7 +30,6 @@
   .main {
     display: flex;
     flex-grow: 1;
-    margin-top: 12px;
     align-items: center;
     justify-content: center;
 
@@ -58,6 +57,7 @@
         font-size: 0.65em;
         font-weight: 600;
         text-transform: uppercase;
+        transition: transform 320ms;
 
         &.current-row {
           border: 0.125em solid #4C4347;
@@ -67,6 +67,25 @@
         &.has-text {
           animation-name: letter-pop;
           animation-duration: 120ms;
+        }
+
+        &.match {
+          background-color: #3aa394;
+          border-color: #3aa394;
+        }
+
+        &.partial {
+          background-color: #d3ad69;
+          border-color: #d3ad69;
+        }
+
+        &.wrong {
+          background-color: #312a2c;
+          border-color: #312a2c;
+        }
+
+        &.fold {
+          transform: scaleX(0);
         }
 
         &.next-letter {
@@ -82,7 +101,7 @@
 
   .info-msg {
     position: absolute;
-    top: 70px;
+    top: 100px;
     padding: 8px 42px;
     background-color: #009AFE;
     color: white;

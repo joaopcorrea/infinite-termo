@@ -47,9 +47,13 @@ enum LetterState {
 })
 export class TermoComponent {
   @ViewChildren('tryContainer') tryContainers!: QueryList<ElementRef>;
+
   // Stores all tries
   // One try is one row in the UI
   readonly tries: Try[] = [];
+
+  // This is to make LetterState enum accessible in html template
+  readonly LetterState = LetterState;
 
   // Message shown in the message panel
   infoMsg = '';
@@ -89,6 +93,7 @@ export class TermoComponent {
         break;
       }
     }
+    // this.targetWord = 'chulé';
     console.log('Target word: ' + this.targetWord);
 
     // Stores the count for each letter from the target word
@@ -139,7 +144,7 @@ export class TermoComponent {
     this.tries[tryIndex].letters[letterIndex].text = letter;
   }
 
-  private checkCurrentTry() {
+  private async checkCurrentTry() {
     // Check if user has typed all letters
     const curTry = this.tries[this.numSubmittedTries];
     if (curTry.letters.some(letter => letter.text === '')) {
@@ -165,7 +170,49 @@ export class TermoComponent {
     // Check if the current try matches the target word
 
     // Store the check results
+
+    // Clone the counts map. Need to use it in every check with the initial 
+    // values
+    const targetWordLetterCounts = { ...this.targetWordLetterCounts };
     const states: LetterState[] = [];
+    for (let i=0; i < WORD_LENGTH; i++) {
+      const expected = this.targetWord[i];
+      const curLetter = curTry.letters[i];
+      const got = curLetter.text.toLowerCase();
+      let state = LetterState.WRONG;
+      if (expected === got && targetWordLetterCounts[got]>0) {
+        targetWordLetterCounts[expected]--;
+        state = LetterState.FULL_MATCH;
+      } else if (
+          this.targetWord.includes(got) &&
+          targetWordLetterCounts[got] > 0 
+      ) {
+        targetWordLetterCounts[got]--;
+        state = LetterState.PARTIAL_MATCH;
+      }
+      states.push(state);
+    }
+    console.log(states);
+
+    // Animate
+    const tryContainer = 
+        this.tryContainers.get(this.numSubmittedTries)?.nativeElement as 
+        HTMLElement;
+    // Get the letter elements
+    const letterEles = tryContainer.querySelectorAll('.letter-container');
+    for (let i=0; i < letterEles.length; i++) {
+      // "Fold" the letter, apply the result (and update the style), then unfold
+      // it
+      const curLetterEle = letterEles[i];
+      curLetterEle.classList.add('fold');
+      // Wait for the fold animation to finish
+      await this.wait(180);
+      // Update state. This will also update styles
+      curTry.letters[i].state = states[i];
+      // Unfold
+      curLetterEle.classList.remove('fold');
+      await this.wait(180);
+    }
   }
 
   private shakeCurrentRow() {
@@ -189,6 +236,14 @@ export class TermoComponent {
         this.fadeOutInfoMessage = false;
       },  500);
     }, 2000);
+  }
+
+  private async wait(ms: number) {
+    await new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, ms);
+    })
   }
   
   isCurrentRow(t: Try, l: Letter) {

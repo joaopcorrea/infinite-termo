@@ -12,6 +12,9 @@
     <div class="board">
       <div class="try-container" *ngFor="let try of tries" #tryContainer>
         <div class="letter-container" *ngFor="let letter of try.letters"
+            [class.match]="letter.state === LetterState.FULL_MATCH"
+            [class.partial]="letter.state === LetterState.PARTIAL_MATCH"
+            [class.wrong]="letter.state === LetterState.WRONG"
             [class.has-text]="letter.text !== ''"
             [class.next-letter]="isNextLetter(try, letter)"
             [class.current-row]="isCurrentRow(try, letter)">
