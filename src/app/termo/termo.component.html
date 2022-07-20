@@ -1,10 +1,11 @@
 <div class="container">
   <div class="title-container">
     <div class="title">
-      Infinite Termo
+      Termo
     </div>
     <div class="subtitle">
-      Infinite version of <a href="https://term.ooo">termo</a>
+      Infinito
+      <!-- Infinite version of <a href="https://term.ooo">termo</a> -->
     </div>
   </div>
 
@@ -23,7 +24,18 @@
   </div>
 
   <div class="keyboard-container">
-    keyboard
+    <div [class]="['row' + i, 'row'].join(' ')"
+        *ngFor="let row of keyboardRows; let i = index">
+        <div *ngFor="let key of row" class="key"
+            [class.enter]="key === 'Enter'">
+            <div *ngIf="key !== 'Backspace'; else backspace">
+              {{key}}
+            </div>
+            <ng-template #backspace>
+              <img class="backspace-img" src="../assets/backspace.svg"/>
+            </ng-template>
+        </div>
+    </div>
   </div>
 
   <div class="info-msg" 

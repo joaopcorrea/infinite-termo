@@ -11,20 +11,18 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-bottom: 1px solid #ddd;
-    padding: 8px 0;
   }
 
   .title {
     text-transform: uppercase;
     font-weight: 600;
-    font-size: 24px;
+    font-size: 38px;
   }
 
   .subtitle {
-    font-size: 12px;
-    color: #999;
-    margin-top: 4px;
+    text-transform: uppercase;
+    font-size: 27.5px;
+    margin-top: -25px;
   }
 
   .main {
@@ -103,6 +101,46 @@
 
   .keyboard-container {
     margin-bottom: 12px;
+
+    .row {
+      display: flex;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    &.row1 {
+      margin-left: 23px;
+    }
+
+    .key {
+      height: 58px;
+      min-width: 42px;
+      margin-right: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 4px;
+      background-color: #4C4347;
+      font-size: 20px;
+      font-weight: 500;
+      user-select: none;
+
+      &.enter {
+        padding: 0 11px;
+        text-transform: uppercase;
+      }
+
+      &:hover {
+        background-color: #615458;
+      }
+    }
+
+    .backspace-img {
+      filter: invert(99%) sepia(96%) saturate(14%) hue-rotate(333deg) 
+              brightness(104%) contrast(104%);
+      height: 24px;
+    }
   }
 
   .info-msg {

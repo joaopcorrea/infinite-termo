@@ -55,6 +55,16 @@ export class TermoComponent {
   // This is to make LetterState enum accessible in html template
   readonly LetterState = LetterState;
 
+  // Keyboard rows
+  readonly keyboardRows = [
+    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+    ['Enter', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'Backspace']
+  ];
+
+  // Stores the state for the keyboard key indexed by keys
+  readonly curLetterStates:{[key: string]: LetterState} = {};
+
   // Message shown in the message panel
   infoMsg = '';
 
@@ -118,6 +128,10 @@ export class TermoComponent {
   handleKeyboardEvent(event: KeyboardEvent) {
     this.handleClickKey(event.key);
   }
+
+  // Returns the state for the given keyboard key
+  // getKeyClass(key: string): string {
+  // }
 
   private handleClickKey(key: string) {
     // Don't process key down when user has won the game
