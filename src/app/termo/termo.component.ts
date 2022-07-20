@@ -70,7 +70,12 @@ export class TermoComponent {
   // Store the target word
   private targetWord = '';
 
+  // Won or not
+  private won = false;
+
   private targetWordLetterCounts: {[letter: string]: number} = {};
+
+  private isChecking: boolean = false;
 
   constructor() {
     // Populate initial state of "tries"
@@ -115,6 +120,11 @@ export class TermoComponent {
   }
 
   private handleClickKey(key: string) {
+    // Don't process key down when user has won the game
+    if (this.won || this.isChecking) {
+      return;
+    }
+
     // If key is a letter or not, update the text in the corresponding letter object
     if (LETTERS[key.toLowerCase()]) {
       // Only allow typing letters in the current try. Don't go over if the 
@@ -131,9 +141,10 @@ export class TermoComponent {
         this.curLetterIndex--;
         this.setLetter('');
       }
-    } 
+    }
     // Submit the current try and check
     else if (key === 'Enter') {
+      this.isChecking = true;
       this.checkCurrentTry();
     }
   }
@@ -148,6 +159,7 @@ export class TermoComponent {
     // Check if user has typed all letters
     const curTry = this.tries[this.numSubmittedTries];
     if (curTry.letters.some(letter => letter.text === '')) {
+      this.isChecking = false;
       this.shakeCurrentRow();
 
       if (curTry.letters.every(letter => letter.text === '')) {
@@ -163,6 +175,7 @@ export class TermoComponent {
     if (!WORDS.includes(wordFromCurTry)) {
       this.showInfoMessage('essa palavra não é aceita');
 
+      this.isChecking = false;
       this.shakeCurrentRow();
       return;
     }
@@ -213,6 +226,29 @@ export class TermoComponent {
       curLetterEle.classList.remove('fold');
       await this.wait(180);
     }
+
+    this.isChecking = false;
+    this.numSubmittedTries++;
+
+    // Check if all letter in the current try are correct
+    if (states.every(state => state === LetterState.FULL_MATCH)) {
+      this.showInfoMessage('show!');
+      this.won = true;
+      // Bounce animation
+      for (let i=0; i < letterEles.length; i++) {
+        const curLetterEle = letterEles[i];
+        curLetterEle.classList.add('bounce');
+        await this.wait(160);
+      }
+      // TODO: show share dialog
+      return;
+    }
+
+    // Running out of tries. Show correct answer
+    if (this.numSubmittedTries === NUM_TRIES) {
+      this.showInfoMessage(this.targetWord.toUpperCase(), false);
+      //  TODO: show share
+    }
   }
 
   private shakeCurrentRow() {
@@ -225,17 +261,19 @@ export class TermoComponent {
     }, 500);
   }
 
-  private showInfoMessage(msg: string) {
+  private showInfoMessage(msg: string, hide = true) {
     this.infoMsg = msg;
-    //Hide after 2s
-    setTimeout(() => {
-      this.fadeOutInfoMessage = true;
-      // Reset when animation is done
+    if (hide) {
+      //Hide after 2s
       setTimeout(() => {
-        this.infoMsg = '';
-        this.fadeOutInfoMessage = false;
-      },  500);
-    }, 2000);
+        this.fadeOutInfoMessage = true;
+        // Reset when animation is done
+        setTimeout(() => {
+          this.infoMsg = '';
+          this.fadeOutInfoMessage = false;
+        }, 500);
+      }, 2000);
+    }
   }
 
   private async wait(ms: number) {
@@ -248,7 +286,7 @@ export class TermoComponent {
   
   isCurrentRow(t: Try, l: Letter) {
     const tryIndex = this.tries.indexOf(t);
-    return this.numSubmittedTries >= tryIndex;
+    return this.numSubmittedTries >= tryIndex && !this.won;
   }
 
   isNextLetter(t: Try, l: Letter) {
@@ -259,6 +297,6 @@ export class TermoComponent {
 
     const letterIndex = this.tries[tryIndex].letters.indexOf(l);
     const index = tryIndex * WORD_LENGTH + letterIndex
-    return index == this.curLetterIndex;
+    return index === this.curLetterIndex && !this.won;
   }
 }

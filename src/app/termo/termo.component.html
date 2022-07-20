@@ -9,7 +9,6 @@
   </div>
 
   <div class="main">
-    <div class="board">
       <div class="try-container" *ngFor="let try of tries" #tryContainer>
         <div class="letter-container" *ngFor="let letter of try.letters"
             [class.match]="letter.state === LetterState.FULL_MATCH"
@@ -20,7 +19,6 @@
             [class.current-row]="isCurrentRow(try, letter)">
           {{ letter.text }}
         </div>
-      </div>
     </div>
   </div>
 
