@@ -47,6 +47,7 @@ enum LetterState {
 })
 export class TermoComponent {
   @ViewChildren('tryContainer') tryContainers!: QueryList<ElementRef>;
+  @ViewChildren('expandButton') expandButton!: ElementRef;
 
   // Stores all tries
   // One try is one row in the UI
@@ -70,6 +71,9 @@ export class TermoComponent {
 
   // Controls info message's fading-out animation
   fadeOutInfoMessage = false;
+
+  showConfigDialogContainer = false;
+  showConfigDialog = false;
 
   // Tracks the current letter index
   private curLetterIndex = 0;
@@ -129,11 +133,25 @@ export class TermoComponent {
     this.handleClickKey(event.key);
   }
 
-  // Returns the state for the given keyboard key
-  // getKeyClass(key: string): string {
-  // }
+  // Returns the classes for the given keyboard key based on its state
+  getKeyClass(key: string): string {
+    const state = this.curLetterStates[key.toLowerCase()];
+    switch (state) {
+      case LetterState.FULL_MATCH:
+        return 'match key';
 
-  private handleClickKey(key: string) {
+      case LetterState.PARTIAL_MATCH:
+        return 'partial key';
+
+      case LetterState.WRONG:
+        return 'wrong key';
+
+      default:
+          return 'key';
+    }
+  }
+
+  handleClickKey(key: string) {
     // Don't process key down when user has won the game
     if (this.won || this.isChecking) {
       return;
@@ -161,6 +179,40 @@ export class TermoComponent {
       this.isChecking = true;
       this.checkCurrentTry();
     }
+  }
+
+  handleClickShare() {
+    // 🟩🟨⬛
+    // Copy results into clipboard
+    let clipboardContent = '';
+    for (let i=0; i < this.numSubmittedTries; i++) {
+      for (let j=0; j < WORD_LENGTH; j++) {
+        const letter = this.tries[i].letters[j];
+        switch (letter.state) {
+          case LetterState.FULL_MATCH:
+            clipboardContent += '🟩';
+            break;
+          case LetterState.PARTIAL_MATCH:
+            clipboardContent += '🟨';
+            break;
+          case LetterState.WRONG:
+            clipboardContent += '⬛';
+            break;
+        }
+      }
+      clipboardContent += '\n';
+    }
+
+    console.log(clipboardContent);
+    navigator.clipboard.writeText(clipboardContent);
+    this.showConfigDialogContainer = false;
+    this.showConfigDialog = false;
+    this.showInfoMessage('copiado para o ctrl+V');
+  }
+  
+  
+  handleClickRestart() {
+    
   }
 
   private setLetter(letter: string) {
@@ -241,6 +293,23 @@ export class TermoComponent {
       await this.wait(180);
     }
 
+    // Save to keyboard key states
+    // Do this after the current try has been submitted and the animation above 
+    // is done
+    for (let i=0; i < WORD_LENGTH; i++) {
+      const curLetter = curTry.letters[i];
+      const got = curLetter.text.toLowerCase();
+      const curStoredState = this.curLetterStates[got];
+      const targetState = states[i];
+      // This allows override state with better result
+      // For example, if "A" was partial match in previous try, and becomes full 
+      // match in the current try, we update the key state to the full match 
+      // (because its enum value is larger)
+      if (curStoredState == null || targetState > curStoredState) { 
+        this.curLetterStates[got] = targetState;
+      }
+    }
+
     this.isChecking = false;
     this.numSubmittedTries++;
 
@@ -254,14 +323,14 @@ export class TermoComponent {
         curLetterEle.classList.add('bounce');
         await this.wait(160);
       }
-      // TODO: show share dialog
+      this.showConfig(1500);
       return;
     }
 
     // Running out of tries. Show correct answer
     if (this.numSubmittedTries === NUM_TRIES) {
-      this.showInfoMessage(this.targetWord.toUpperCase(), false);
-      //  TODO: show share
+      this.showInfoMessage('palavra certa: ' + this.targetWord.toLowerCase(), false);
+      this.showConfig(1500);
     }
   }
 
@@ -297,6 +366,25 @@ export class TermoComponent {
       }, ms);
     })
   }
+
+  shakeExpand:boolean = false;
+  handleExpandClick() {
+    this.shakeExpand = true;
+    setTimeout(() => {
+      this.shakeExpand = false;
+    }, 500);
+  }
+
+  showConfig(msToWait = 0) {
+    setTimeout(() => {
+      this.showConfigDialogContainer = true;
+      // Wait a tick till dialog container is displayed
+      setTimeout(() => {
+        // Slide in the config dialog
+        this.showConfigDialog = true;
+      });
+    }, msToWait);
+  };
   
   isCurrentRow(t: Try, l: Letter) {
     const tryIndex = this.tries.indexOf(t);

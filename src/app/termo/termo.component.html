@@ -1,13 +1,21 @@
 <div class="container">
-  <div class="title-container">
-    <div class="title">
-      Termo
+  <nav>  
+    <button (click)="handleExpandClick()" [class.shake]="shakeExpand" #expandButton>
+      <img src="../assets/expand_more.svg"/>
+    </button>
+    <div class="title-container">
+      <div class="title">
+        Termo
+      </div>
+      <div class="subtitle">
+        Infinito
+        <!-- Infinite version of <a href="https://term.ooo">termo</a> -->
+      </div>
     </div>
-    <div class="subtitle">
-      Infinito
-      <!-- Infinite version of <a href="https://term.ooo">termo</a> -->
-    </div>
-  </div>
+    <button (click)="showConfig()">
+      <img src="../assets/settings.svg"/>
+    </button>
+  </nav>
 
   <div class="main">
       <div class="try-container" *ngFor="let try of tries" #tryContainer>
@@ -26,8 +34,9 @@
   <div class="keyboard-container">
     <div [class]="['row' + i, 'row'].join(' ')"
         *ngFor="let row of keyboardRows; let i = index">
-        <div *ngFor="let key of row" class="key"
-            [class.enter]="key === 'Enter'">
+        <div *ngFor="let key of row" [class]="getKeyClass(key)"
+            [class.enter]="key === 'Enter'"
+            (click)="handleClickKey(key)">
             <div *ngIf="key !== 'Backspace'; else backspace">
               {{key}}
             </div>
@@ -42,5 +51,16 @@
       [class.show]="infoMsg !== ''"
       [class.fade-out]="fadeOutInfoMessage">
     {{ infoMsg }}
+  </div>
+
+  <div class="config-dialog-container" [class.show]="showConfigDialogContainer">
+    <div class="config-dialog" [class.show]="showConfigDialog">
+      <label>Quantidade de letras</label>
+      <input />
+      <label>Quantidade de tentativas</label>
+      <input />
+      <button (click)="handleClickRestart()">Recomeçar</button>
+      <button (click)="handleClickShare()">Compartilhar</button>
+    </div>
   </div>
 </div>
