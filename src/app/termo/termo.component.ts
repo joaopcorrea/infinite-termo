@@ -1,11 +1,12 @@
-import { Component, HostListener, ViewChildren, QueryList, ElementRef } from '@angular/core';
+import { 
+  Component, 
+  HostListener, 
+  ViewChildren, 
+  QueryList, 
+  ElementRef, 
+  NgModule 
+} from '@angular/core';
 import { WORDS } from '../words';
-
-// Length of the word
-const WORD_LENGTH = 5;
-
-// Number of tries
-const NUM_TRIES = 6;
 
 // Letter map
 const LETTERS = (() => {
@@ -49,9 +50,15 @@ export class TermoComponent {
   @ViewChildren('tryContainer') tryContainers!: QueryList<ElementRef>;
   @ViewChildren('expandButton') expandButton!: ElementRef;
 
+  // Length of the word
+  WORD_LENGTH: number = 5;
+
+  // Number of tries
+  NUM_TRIES: number = 6;
+
   // Stores all tries
   // One try is one row in the UI
-  readonly tries: Try[] = [];
+  tries: Try[] = [];
 
   // This is to make LetterState enum accessible in html template
   readonly LetterState = LetterState;
@@ -64,7 +71,7 @@ export class TermoComponent {
   ];
 
   // Stores the state for the keyboard key indexed by keys
-  readonly curLetterStates:{[key: string]: LetterState} = {};
+  curLetterStates:{[key: string]: LetterState} = {};
 
   // Message shown in the message panel
   infoMsg = '';
@@ -92,26 +99,36 @@ export class TermoComponent {
   private isChecking: boolean = false;
 
   constructor() {
-    // Populate initial state of "tries"
-    for (let i = 0; i < NUM_TRIES; i++) {
-      const letters: Letter[] = [];
-      for (let j = 0; j < WORD_LENGTH; j++) {
-        letters.push({ text: '', state: LetterState.PENDING });
-      }
-      this.tries.push({ letters });
-    }
+    this.initializeGame();
+  }
+
+  initializeGame() {
+    this.tries = [];
+    this.targetWordLetterCounts = {};
+    this.curLetterStates = {};
+    this.curLetterIndex = 0;
+    this.numSubmittedTries = 0;
+    this.targetWord = '';
+    this.won = false;
+    this.targetWordLetterCounts = {};
+    this.isChecking = false;
 
     // Get a target word from the word list
-    const numWords = WORDS.length;
-    while(true) {
-      //Randomly select a word and check if its length is WORD_LENGTH
-      const index = Math.floor(Math.random() * numWords);
-      const word = WORDS[index];
-      if (word.length === WORD_LENGTH) {
-        this.targetWord = word.toLowerCase();
-        break;
-      }
+    const filteredWords: string[] = WORDS.filter(w => w.length === this.WORD_LENGTH);
+    console.log(this.WORD_LENGTH);
+    
+    if (!filteredWords.length) {
+      this.showInfoMessage('nenhuma palavra foi encontrada');
+      return;
     }
+
+    const numWords = filteredWords.length;
+
+    //Randomly select a word and check if its length is WORD_LENGTH
+    const index = Math.floor(Math.random() * numWords);
+    const word = filteredWords[index];
+    this.targetWord = word.toLowerCase();
+
     // this.targetWord = 'chulé';
     console.log('Target word: ' + this.targetWord);
 
@@ -126,6 +143,15 @@ export class TermoComponent {
       this.targetWordLetterCounts[letter]++;
     }
     console.log(this.targetWordLetterCounts);
+
+    // Populate initial state of "tries"
+    for (let i = 0; i < this.NUM_TRIES; i++) {
+      const letters: Letter[] = [];
+      for (let j = 0; j < this.WORD_LENGTH; j++) {
+        letters.push({ text: '', state: LetterState.PENDING });
+      }
+      this.tries.push({ letters });
+    }
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -157,11 +183,13 @@ export class TermoComponent {
       return;
     }
 
-    // If key is a letter or not, update the text in the corresponding letter object
+    // If key is a letter or not, update the text in the corresponding letter 
+    // object
     if (LETTERS[key.toLowerCase()]) {
       // Only allow typing letters in the current try. Don't go over if the 
       // current try has not been submitted
-      if (this.curLetterIndex < (this.numSubmittedTries + 1) * WORD_LENGTH) {
+      if (this.curLetterIndex < (this.numSubmittedTries + 1) * 
+          this.WORD_LENGTH) {
         this.setLetter(key);
         this.curLetterIndex++;
       }
@@ -169,7 +197,7 @@ export class TermoComponent {
     // Handle delete
     else if (key === 'Backspace') {
       // Don't delete previous try
-      if (this.curLetterIndex > this.numSubmittedTries * WORD_LENGTH) {
+      if (this.curLetterIndex > this.numSubmittedTries * this.WORD_LENGTH) {
         this.curLetterIndex--;
         this.setLetter('');
       }
@@ -181,12 +209,17 @@ export class TermoComponent {
     }
   }
 
+  handleClickRestart() {
+    this.initializeGame();
+    this.closeConfigDialog();
+  }
+
   handleClickShare() {
     // 🟩🟨⬛
     // Copy results into clipboard
     let clipboardContent = '';
     for (let i=0; i < this.numSubmittedTries; i++) {
-      for (let j=0; j < WORD_LENGTH; j++) {
+      for (let j=0; j < this.WORD_LENGTH; j++) {
         const letter = this.tries[i].letters[j];
         switch (letter.state) {
           case LetterState.FULL_MATCH:
@@ -205,19 +238,18 @@ export class TermoComponent {
 
     console.log(clipboardContent);
     navigator.clipboard.writeText(clipboardContent);
-    this.showConfigDialogContainer = false;
-    this.showConfigDialog = false;
+    this.closeConfigDialog();
     this.showInfoMessage('copiado para o ctrl+V');
   }
-  
-  
-  handleClickRestart() {
-    
+
+  closeConfigDialog() {
+    this.showConfigDialogContainer = false;
+    this.showConfigDialog = false;
   }
 
   private setLetter(letter: string) {
-    const tryIndex = Math.floor(this.curLetterIndex / WORD_LENGTH);
-    const letterIndex = this.curLetterIndex - tryIndex * WORD_LENGTH;
+    const tryIndex = Math.floor(this.curLetterIndex / this.WORD_LENGTH);
+    const letterIndex = this.curLetterIndex - tryIndex * this.WORD_LENGTH;
     this.tries[tryIndex].letters[letterIndex].text = letter;
   }
 
@@ -231,14 +263,16 @@ export class TermoComponent {
       if (curTry.letters.every(letter => letter.text === '')) {
         return;
       }
-      this.showInfoMessage('só palavras com 5 letras');
+      this.showInfoMessage(`só palavras com ${this.WORD_LENGTH} letras`);
       return;
     }
 
     // Check if the current try is a word in the list
-    const wordFromCurTry = 
-        curTry.letters.map(letter => letter.text).join('').toLowerCase();
-    if (!WORDS.includes(wordFromCurTry)) {
+    let wordFromCurTry: string | undefined = 
+        curTry.letters.map(letter => letter.text).join('').toUpperCase();
+    wordFromCurTry = WORDS.find(w => this.removeAccent(w) === wordFromCurTry);
+    if (!wordFromCurTry)
+    {
       this.showInfoMessage('essa palavra não é aceita');
 
       this.isChecking = false;
@@ -254,16 +288,20 @@ export class TermoComponent {
     // values
     const targetWordLetterCounts = { ...this.targetWordLetterCounts };
     const states: LetterState[] = [];
-    for (let i=0; i < WORD_LENGTH; i++) {
+    for (let i=0; i < this.WORD_LENGTH; i++) {
       const expected = this.targetWord[i];
       const curLetter = curTry.letters[i];
       const got = curLetter.text.toLowerCase();
+      this.tries[this.numSubmittedTries].letters[i].text = wordFromCurTry[i].toLowerCase();
+
       let state = LetterState.WRONG;
-      if (expected === got && targetWordLetterCounts[got]>0) {
+      if (this.removeAccent(expected) === got && 
+          targetWordLetterCounts[got] > 0) 
+      {
         targetWordLetterCounts[expected]--;
         state = LetterState.FULL_MATCH;
       } else if (
-          this.targetWord.includes(got) &&
+          this.removeAccent(this.targetWord).includes(got) &&
           targetWordLetterCounts[got] > 0 
       ) {
         targetWordLetterCounts[got]--;
@@ -296,7 +334,7 @@ export class TermoComponent {
     // Save to keyboard key states
     // Do this after the current try has been submitted and the animation above 
     // is done
-    for (let i=0; i < WORD_LENGTH; i++) {
+    for (let i=0; i < this.WORD_LENGTH; i++) {
       const curLetter = curTry.letters[i];
       const got = curLetter.text.toLowerCase();
       const curStoredState = this.curLetterStates[got];
@@ -328,8 +366,9 @@ export class TermoComponent {
     }
 
     // Running out of tries. Show correct answer
-    if (this.numSubmittedTries === NUM_TRIES) {
-      this.showInfoMessage('palavra certa: ' + this.targetWord.toLowerCase(), false);
+    if (this.numSubmittedTries === this.NUM_TRIES) {
+      this.showInfoMessage('palavra certa: ' + 
+          this.targetWord.toLowerCase(), false);
       this.showConfig(1500);
     }
   }
@@ -398,7 +437,28 @@ export class TermoComponent {
       return false;
 
     const letterIndex = this.tries[tryIndex].letters.indexOf(l);
-    const index = tryIndex * WORD_LENGTH + letterIndex
+    const index = tryIndex * this.WORD_LENGTH + letterIndex
     return index === this.curLetterIndex && !this.won;
+  }
+
+  getWordLength(event: any) {
+    this.WORD_LENGTH = +event.target.value > 0 ? +event.target.value : 0;
+    
+    console.log(this.WORD_LENGTH, event.target.value);
+  }
+  getNumberOfTries(event: any) {
+    this.NUM_TRIES = +event.target.value > 0 ? +event.target.value : 0;
+
+    console.log(this.WORD_LENGTH, event.target.value);
+  }
+
+  removeAccent(str: string) {
+    return str
+      .toUpperCase()
+      .replace(/[ÀÁÂÃÄÅ]/g,"A")
+      .replace(/[ÈÉÊË]/g,"E")
+      .replace(/[ÌÍÎÏ]/g,"I")
+      .replace(/[ÒÓÕÔÖ]/g,"O")
+      .replace(/[ÙÚÛÜ]/g,"U");
   }
 }

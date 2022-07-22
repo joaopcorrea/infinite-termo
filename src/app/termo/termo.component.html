@@ -53,12 +53,14 @@
     {{ infoMsg }}
   </div>
 
-  <div class="config-dialog-container" [class.show]="showConfigDialogContainer">
-    <div class="config-dialog" [class.show]="showConfigDialog">
+  <div class="config-dialog-container" [class.show]="showConfigDialogContainer" 
+      (click)="closeConfigDialog()">
+    <div class="config-dialog" [class.show]="showConfigDialog"
+      (click)="$event.stopPropagation()">
       <label>Quantidade de letras</label>
-      <input />
+      <input type="number" [value]="WORD_LENGTH" (keyup)="getWordLength($event)"/>
       <label>Quantidade de tentativas</label>
-      <input />
+      <input type="number" [value]="NUM_TRIES" (keyup)="getNumberOfTries($event)"/>
       <button (click)="handleClickRestart()">Recomeçar</button>
       <button (click)="handleClickShare()">Compartilhar</button>
     </div>
