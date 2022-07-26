@@ -25,7 +25,8 @@
             [class.wrong]="letter.state === LetterState.WRONG"
             [class.has-text]="letter.text !== ''"
             [class.next-letter]="isNextLetter(try, letter)"
-            [class.current-row]="isCurrentRow(try, letter)">
+            [class.current-row]="isCurrentRow(try, letter)"
+            (click)="setCurrentLetterIndex(try, letter)">
           {{ letter.text }}
         </div>
     </div>

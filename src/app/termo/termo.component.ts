@@ -98,8 +98,15 @@ export class TermoComponent {
 
   private isChecking: boolean = false;
 
+  private words: {[word: string]: string} = {};
+
   constructor() {
+    console.log('starting');
+    WORDS.map(w => this.words[this.removeAccent(w)] = w);
+    console.log(WORDS.length, this.words);
+    console.log('mapped');
     this.initializeGame();
+    console.log('started');
   }
 
   initializeGame() {
@@ -130,12 +137,14 @@ export class TermoComponent {
     this.targetWord = word.toLowerCase();
 
     // this.targetWord = 'chulé';
+    this.targetWord = 'abrupto';
     console.log('Target word: ' + this.targetWord);
 
     // Stores the count for each letter from the target word
     // For example, if the target word is "happy", then this map will look like:
     // { 'h':1, 'a':1, 'p':2, 'y':1, }
-    for (const letter of this.targetWord) {
+    for (let letter of this.targetWord) {
+      letter = this.removeAccent(letter);
       const count = this.targetWordLetterCounts[letter];
       if (count == null) {
         this.targetWordLetterCounts[letter] = 0;
@@ -188,17 +197,30 @@ export class TermoComponent {
     if (LETTERS[key.toLowerCase()]) {
       // Only allow typing letters in the current try. Don't go over if the 
       // current try has not been submitted
-      if (this.curLetterIndex < (this.numSubmittedTries + 1) * 
-          this.WORD_LENGTH) {
+
+      const maxIndex = (this.numSubmittedTries + 1) * this.WORD_LENGTH;
+      if (this.curLetterIndex < maxIndex) {
         this.setLetter(key);
         this.curLetterIndex++;
+
+        while (this.curLetterIndex < maxIndex && this.getCurLetter()) {
+          this.curLetterIndex++;
+        }
+
+        if (this.curLetterIndex > maxIndex) {
+          this.curLetterIndex--;
+        }
       }
     }
     // Handle delete
     else if (key === 'Backspace') {
       // Don't delete previous try
-      if (this.curLetterIndex > this.numSubmittedTries * this.WORD_LENGTH) {
-        this.curLetterIndex--;
+      const minIndex = this.numSubmittedTries * this.WORD_LENGTH;
+      const maxIndex = (this.numSubmittedTries+1) * this.WORD_LENGTH;
+      if (this.curLetterIndex >= minIndex) {
+        if (this.curLetterIndex >= maxIndex || (!this.getCurLetter() && 
+            this.curLetterIndex > minIndex))
+          this.curLetterIndex--;
         this.setLetter('');
       }
     }
@@ -207,6 +229,21 @@ export class TermoComponent {
       this.isChecking = true;
       this.checkCurrentTry();
     }
+  }
+
+  setCurrentLetterIndex(t: Try, l: Letter) {
+
+    const tryIndex = this.tries.indexOf(t);
+    
+    if (this.numSubmittedTries != tryIndex || this.won)
+      return;    
+
+    const letterIndex = this.tries[tryIndex].letters.indexOf(l);
+    const index = tryIndex * this.WORD_LENGTH + letterIndex
+
+    this.curLetterIndex = index;
+
+    // return index === this.curLetterIndex && !this.won;
   }
 
   handleClickRestart() {
@@ -253,6 +290,12 @@ export class TermoComponent {
     this.tries[tryIndex].letters[letterIndex].text = letter;
   }
 
+  private getCurLetter() {
+    const tryIndex = Math.floor(this.curLetterIndex / this.WORD_LENGTH);
+    const letterIndex = this.curLetterIndex - tryIndex * this.WORD_LENGTH;
+    return this.tries[tryIndex].letters[letterIndex].text;
+  }
+
   private async checkCurrentTry() {
     // Check if user has typed all letters
     const curTry = this.tries[this.numSubmittedTries];
@@ -269,9 +312,8 @@ export class TermoComponent {
 
     // Check if the current try is a word in the list
     let wordFromCurTry: string | undefined = 
-        curTry.letters.map(letter => letter.text).join('').toUpperCase();
-    wordFromCurTry = WORDS.find(w => this.removeAccent(w) === wordFromCurTry);
-    if (!wordFromCurTry)
+        curTry.letters.map(letter => letter.text).join('').toLowerCase();
+    if (!this.words[wordFromCurTry])
     {
       this.showInfoMessage('essa palavra não é aceita');
 
@@ -288,20 +330,30 @@ export class TermoComponent {
     // values
     const targetWordLetterCounts = { ...this.targetWordLetterCounts };
     const states: LetterState[] = [];
+    const targetWord = this.removeAccent(this.targetWord);
     for (let i=0; i < this.WORD_LENGTH; i++) {
-      const expected = this.targetWord[i];
-      const curLetter = curTry.letters[i];
-      const got = curLetter.text.toLowerCase();
-      this.tries[this.numSubmittedTries].letters[i].text = wordFromCurTry[i].toLowerCase();
+      const expected = targetWord[i];
+      const got = wordFromCurTry[i];
+      this.tries[this.numSubmittedTries].letters[i].text = this.words[wordFromCurTry][i];
 
       let state = LetterState.WRONG;
-      if (this.removeAccent(expected) === got && 
-          targetWordLetterCounts[got] > 0) 
+      if (expected === got) 
       {
+        if (targetWordLetterCounts[got] <= 0) {
+          for (let x=0; x < this.targetWordLetterCounts[got]; x++) {
+            const index = wordFromCurTry.indexOf(got, x);
+            if (states[index] === LetterState.PARTIAL_MATCH) {
+              states[index] = LetterState.WRONG;
+              targetWordLetterCounts[expected]++;
+              break;
+            }
+          }
+        }
+
         targetWordLetterCounts[expected]--;
         state = LetterState.FULL_MATCH;
       } else if (
-          this.removeAccent(this.targetWord).includes(got) &&
+          targetWord.includes(got) &&
           targetWordLetterCounts[got] > 0 
       ) {
         targetWordLetterCounts[got]--;
@@ -459,6 +511,8 @@ export class TermoComponent {
       .replace(/[ÈÉÊË]/g,"E")
       .replace(/[ÌÍÎÏ]/g,"I")
       .replace(/[ÒÓÕÔÖ]/g,"O")
-      .replace(/[ÙÚÛÜ]/g,"U");
+      .replace(/[ÙÚÛÜ]/g,"U")
+      .replace(/[Ç]/g, "C")
+      .toLowerCase();
   }
 }
