@@ -130,6 +130,10 @@
         &.next-letter {
           border-bottom: 0.25em solid #4C4347;
         }
+
+        &:hover {
+          cursor: pointer;
+        }
       }
     }
   }

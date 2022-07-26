@@ -136,8 +136,6 @@ export class TermoComponent {
     const word = filteredWords[index];
     this.targetWord = word.toLowerCase();
 
-    // this.targetWord = 'chulé';
-    this.targetWord = 'abrupto';
     console.log('Target word: ' + this.targetWord);
 
     // Stores the count for each letter from the target word
